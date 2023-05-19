@@ -478,6 +478,9 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
     setThreads,
     postMessageSend,
   } = useContext(MessagingContext);
+  const pageLimit = 10;
+  const [filteredMessages, setMessages] = useState([]);
+  const [page, setPage] = useState(1);
   const [messageContent, setMessageContent] = useState('');
   const [recipientId, setRecipientId] = useState('');
   const [showCharts, setShowCharts] = useState(false);
@@ -501,15 +504,6 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
       setIsLoading(false);
     }
   }, [errorMessage]);
-
-  const scrollToBottom = () => {
-    // without animation
-    messagesEndRef.current.scrollIntoView();
-    // with animation
-    // messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  };
-
-  useEffect(scrollToBottom);
 
   const validateMessage = (payload) => {
     const errors = {};
@@ -587,6 +581,35 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
     setMessageContent('');
   };
 
+  useEffect(() => {
+    if (messages && messages.length) {
+      fetchMessages();
+      messagesEndRef.current.scrollIntoView();
+    }
+  }, [messages]);
+
+  const handleScroll = (e) => {
+    if (e.target.scrollTop == 0 && page * pageLimit <= messages.length) {
+      fetchMessages(e);
+    }
+    return;
+  };
+
+  const fetchMessages = (e) => {
+    if (messages && messages.length) {
+      let limit = page * pageLimit;
+      if (page * pageLimit < messages.length && messages.length > 1) {
+        setMessages(messages.slice(messages.length - limit, messages.length));
+        if (e) {
+          e.target.scrollTop += e.target.offsetHeight;
+        }
+        setPage(page + 1);
+      } else {
+        setMessages(messages.slice(0, messages.length));
+      }
+    }
+  };
+
   return (
     <>
       <Paper className={paper}>
@@ -602,7 +625,16 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
             setShowCharts={setShowCharts}
           />
         ) : null}
-        <div id="style-1" className={messagesBody}>
+        <div
+          id="style-1"
+          className={messagesBody}
+          onScroll={(e) => {
+            handleScroll(e);
+          }}
+          onLoad={(e) => {
+            handleScroll(e);
+          }}
+        >
           {isLoading ? (
             <Grid item xs className={centeredMessage}>
               <CircularProgress style={{ margin: '30px' }} />
@@ -614,17 +646,19 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 Loading...
               </Typography>
             </Grid>
-          ) : !isLoading && messages ? (
-            messages.map((message, i) => {
+          ) : !isLoading && filteredMessages ? (
+            filteredMessages.map((message, i) => {
               if (message.type === 'message') {
                 return message.from === user.userName ? (
                   <SentMessage
                     key={message.id ? message.id : i}
+                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 ) : message.body.length > 1 ? (
                   <RecievedMessage
                     key={message.id ? message.id : i}
+                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 ) : (
@@ -637,6 +671,7 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 return (
                   <SurveyMessage
                     key={message.id ? `${message.id}${i}` : i}
+                    dataItem={message.id ? message.id : i}
                     message={message}
                     user={user}
                     type={message.type}
@@ -646,6 +681,7 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 return (
                   <AnnounceMessage
                     key={message.id ? message.id : i}
+                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 );
