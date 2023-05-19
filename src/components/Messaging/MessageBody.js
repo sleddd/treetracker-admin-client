@@ -652,13 +652,11 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 return message.from === user.userName ? (
                   <SentMessage
                     key={message.id ? message.id : i}
-                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 ) : message.body.length > 1 ? (
                   <RecievedMessage
                     key={message.id ? message.id : i}
-                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 ) : (
@@ -671,7 +669,6 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 return (
                   <SurveyMessage
                     key={message.id ? `${message.id}${i}` : i}
-                    dataItem={message.id ? message.id : i}
                     message={message}
                     user={user}
                     type={message.type}
@@ -681,7 +678,6 @@ const MessageBody = ({ messages, messageRecipient, avatar }) => {
                 return (
                   <AnnounceMessage
                     key={message.id ? message.id : i}
-                    dataItem={message.id ? message.id : i}
                     message={message}
                   />
                 );
